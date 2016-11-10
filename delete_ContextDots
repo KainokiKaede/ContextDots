@@ -1,19 +1,22 @@
-Sub ContextDots_byvlstr()
-    On Error Resume Next
-    
-            With ActivePresentation
-            
-                SectionCount = .SectionProperties.Count
-                
-                For X = 1 To .Slides.Count
-                
-                    .Slides(X).Shapes("BG").Delete
-                    
-                    .Slides(X).Shapes("Bullet").Delete
-                    
-                    .Slides(X).Shapes("SectionTitleBox").Delete
-                    
-                Next X:
-                
-            End With
+Sub ContextDots()
+
+    With ActivePresentation
+
+        SectionCount = .SectionProperties.Count
+
+        ' Change Transparency here.
+        alpha = 0.2
+
+        For X = 1 To .Slides.Count
+
+            ' Delete ContextDots related objects in this slide.
+            ' If you want to delete multiple things in a loop, you have to run the loop backwords, because numbering can be messed up by deletion of objects.
+            For i = .Slides(X).Shapes.Count To 1 Step -1
+                ' Just "ContextDots" is enough, but in case the previous run did not run through the end and they were not in a group.
+                If .Slides(X).Shapes(i).Name = "ContextDots" Or .Slides(X).Shapes(i).Name = "CDBackground" Or .Slides(X).Shapes(i).Name = "CDBullet" Or .Slides(X).Shapes(i).Name = "CDSectionTitleBox" Then
+                    .Slides(X).Shapes(i).Delete
+                End If
+            Next i
+        Next X:
+    End With
 End Sub

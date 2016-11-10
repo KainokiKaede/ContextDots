@@ -1,65 +1,104 @@
 Sub ContextDots()
-    On Error Resume Next
-            With ActivePresentation
-            
-                SectionCount = .SectionProperties.Count
-                
-                For X = 1 To .Slides.Count
-                    .Slides(X).Shapes("Background").Delete
-                    .Slides(X).Shapes("Bullet").Delete
-                    .Slides(X).Shapes("SectionTitleBox").Delete
-                    
-                    Set bg = .Slides(X).Shapes.AddShape(msoShapeRectangle, 0, 0, .PageSetup.SlideWidth, 25)
-                    bg.Name = "Background"
-                    ' Change the rectangle's colours here
-                    bg.Fill.ForeColor.RGB = vbBlack
-                    bg.Line.ForeColor.RGB = vbBlack
-                    
-                    ' Change the bullets' size, shape and spacing here
-                    BulletSize = 6
-                    BulletShape = msoShapeOval
-                    BulletSpacing = 2
-                    
-                    Offset = 20
-                    SlideNumber = 1
-                    For Y = 1 To SectionCount
-                    
-                        If Y <> 1 Then
-                            Offset = (Y - 1) * .PageSetup.SlideWidth / (SectionCount)
-                        End If
-                        TextboxOffset = Offset - 7.5
-                        
-                        SectionSlidesCount = .SectionProperties.SlidesCount(Y)
-                        sectionTitle = .SectionProperties.Name(Y)
-                        Set textbox = .Slides(X).Shapes.AddTextbox(msoTextOrientationHorizontal, _
-                                TextboxOffset, -2, 200, 50)
-                        textbox.TextFrame.TextRange.Text = sectionTitle
-                        textbox.Name = "SectionTitleBox"
-                        ' Change the font colour, size and type here
-                        textbox.TextFrame.TextRange.Font.Color = vbWhite
-                        textbox.TextFrame.TextRange.Font.Size = 11
-                        textbox.TextFrame.TextRange.Font.Name = "Calibri Light"
-                        
-                        For Z = 1 To SectionSlidesCount
-                            Set Bullet = .Slides(X).Shapes.AddShape(BulletShape, _
-                                Offset + (Z - 1) * (BulletSpacing + BulletSize), 16, BulletSize, BulletSize)
-                            Bullet.Name = "Bullet"
-                            Bullet.Line.Weight = 1
-                            ' Change the bullets' fill and line colour here (case: Other slide)
-                            Bullet.Fill.ForeColor.RGB = vbBlack
-                            Bullet.Line.ForeColor.RGB = vbWhite
-                            
-                            
-                            If X = SlideNumber Then
-                                textbox.TextFrame.TextRange.Font.Bold = True
-                                ' Change the bullets' fill and line colour here (case: active slide)
-                                Bullet.Fill.ForeColor.RGB = vbWhite
-                            End If
-                            
-                            SlideNumber = SlideNumber + 1
-                        Next Z:
-                    Next Y:
-                    
-                Next X:
-            End With
+
+    With ActivePresentation
+
+        SectionCount = .SectionProperties.Count
+
+        ' Change Transparency here.
+        alpha = 0.2
+
+        For X = 1 To .Slides.Count
+
+            ' Delete ContextDots related objects in this slide.
+            ' If you want to delete multiple things in a loop, you have to run the loop backwords, because numbering can be messed up by deletion of objects.
+            For i = .Slides(X).Shapes.Count To 1 Step -1
+                ' Just "ContextDots" is enough, but in case the previous run did not run through the end and they were not in a group.
+                If .Slides(X).Shapes(i).Name = "ContextDots" Or .Slides(X).Shapes(i).Name = "CDBackground" Or .Slides(X).Shapes(i).Name = "CDBullet" Or .Slides(X).Shapes(i).Name = "CDSectionTitleBox" Then
+                    .Slides(X).Shapes(i).Delete
+                End If
+            Next i
+
+            ' To delete everything and add nothing, just uncomment the following line.
+            ' GoTo ContinueX
+
+            ' If the slide is hidden, do not add any shapes and go to the next slide.
+            ' VBA does not have Continue. Use GoTo as Continue.
+            If .Slides(X).SlideShowTransition.Hidden Then
+                GoTo ContinueX
+            End If
+
+            startshapescount = .Slides(X).Shapes.Count
+
+            Set bg = .Slides(X).Shapes.AddShape(msoShapeRectangle, 0, 0, .PageSetup.SlideWidth, 25)
+            bg.Name = "CDBackground"
+            ' Change the rectangle's colours here
+            bg.Fill.ForeColor.RGB = vbBlack
+            bg.Fill.Transparency = alpha
+            bg.Line.ForeColor.RGB = vbBlack
+            bg.Line.Transparency = alpha
+
+            ' Change the bullets' size, shape and spacing here
+            BulletSize = 6
+            BulletShape = msoShapeOval
+            BulletSpacing = 2
+
+            Offset = 20
+            SlideNumber = 1
+            For Y = 1 To SectionCount
+
+                If Y <> 1 Then
+                    Offset = (Y - 1) * .PageSetup.SlideWidth / (SectionCount)
+                End If
+                TextboxOffset = Offset - 7.5
+
+                SectionSlidesCount = .SectionProperties.SlidesCount(Y)
+                sectionTitle = .SectionProperties.Name(Y)
+                Set TextBox = .Slides(X).Shapes.AddTextbox(msoTextOrientationHorizontal, TextboxOffset, -2, 200, 50)
+                TextBox.TextFrame.TextRange.Text = sectionTitle
+                TextBox.Name = "CDSectionTitleBox"
+                ' Change the font colour, size and type here
+                TextBox.TextFrame.TextRange.Font.Color = vbWhite
+                TextBox.TextFrame.TextRange.Font.Size = 11
+
+                For Z = 1 To SectionSlidesCount
+                    If .Slides(SlideNumber).SlideShowTransition.Hidden Then
+                        ' Shift left for one bullet.
+                        Offset = Offset - (BulletSpacing + BulletSize)
+                        GoTo ContinueZ
+                    End If
+                    Set Bullet = .Slides(X).Shapes.AddShape(BulletShape, Offset + (Z - 1) * (BulletSpacing + BulletSize), 16, BulletSize, BulletSize)
+                    Bullet.Name = "CDBullet"
+                    Bullet.Line.Weight = 1
+                    ' Change the bullets' fill and line colour here (case: Other slide)
+                    Bullet.Fill.ForeColor.RGB = vbBlack
+                    Bullet.Fill.Transparency = alpha
+                    Bullet.Line.ForeColor.RGB = vbWhite
+                    Bullet.Line.Transparency = alpha
+
+                    If X = SlideNumber Then
+                        TextBox.TextFrame.TextRange.Font.Bold = True
+                        ' Change the bullets' fill and line colour here (case: active slide)
+                        Bullet.Fill.ForeColor.RGB = vbWhite
+                        Bullet.Fill.Transparency = alpha
+                    End If
+
+ContinueZ:
+                    SlideNumber = SlideNumber + 1
+                Next Z:
+            Next Y:
+
+            endshapescount = .Slides(X).Shapes.Count
+
+            ' Put everything that were added in one group.
+            Dim ShapesToGroup()
+            ReDim ShapesToGroup(endshapescount - startshapescount)
+            For i = 1 To endshapescount - startshapescount
+                ShapesToGroup(i) = endshapescount - i + 1
+            Next i
+            Set CDGroup = .Slides(X).Shapes.Range(ShapesToGroup).Group
+            CDGroup.Name = "ContextDots"
+
+ContinueX:
+        Next X:
+    End With
 End Sub
